@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     bagiduit
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB:       bagiduit
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL:              "postgresql://bagiduit:changeme@postgres:5432/bagiduit"
+      NEXTAUTH_URL:              "https://your-domain.com"
+      NEXTAUTH_SECRET:           "CHANGE_THIS_TO_RANDOM_SECRET"
+      MIDTRANS_IS_PRODUCTION:    "false"
+      MIDTRANS_SERVER_KEY:       "SB-Mid-server-XXXX"
+      MIDTRANS_CLIENT_KEY:       "SB-Mid-client-XXXX"
+      NEXT_PUBLIC_APP_URL:       "https://your-domain.com"
+
+volumes:
+  postgres_data:
