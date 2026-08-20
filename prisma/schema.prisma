@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String        @id @default(cuid())
+  username       String        @unique
+  email          String        @unique
+  password       String
+  displayName    String
+  avatarUrl      String?
+  bio            String?
+  minDonation    Int           @default(5000)
+  alertDuration  Int           @default(7)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  bankAccounts   BankAccount[]
+  donations      Donation[]    @relation("StreamerDonations")
+
+  @@map("users")
+}
+
+model BankAccount {
+  id            String   @id @default(cuid())
+  userId        String
+  bankCode      String
+  bankName      String
+  accountNumber String
+  accountName   String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("bank_accounts")
+}
+
+model Donation {
+  id              String         @id @default(cuid())
+  streamerId      String
+  donorName       String
+  message         String?
+  amount          Int
+  paymentMethod   PaymentMethod
+  status          DonationStatus @default(PENDING)
+  midtransOrderId String         @unique
+  vaNumber        String?
+  qrString        String?
+  expiredAt       DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  streamer        User           @relation("StreamerDonations", fields: [streamerId], references: [id])
+
+  @@map("donations")
+}
+
+enum PaymentMethod {
+  QRIS
+  BCA_VA
+  BNI_VA
+  BRI_VA
+  MANDIRI_VA
+  PERMATA_VA
+}
+
+enum DonationStatus {
+  PENDING
+  PAID
+  EXPIRED
+  FAILED
+  CANCELLED
+}
